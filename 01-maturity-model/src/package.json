@@ -1,0 +1,26 @@
+{
+  "name": "just-express",
+  "version": "1.0.0",
+  "description": "A tutorial on Express.js",
+  "main": "index.js",
+  "scripts": {
+    "start": "node app"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ehsankorhani/just-express.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ehsankorhani/just-express/issues"
+  },
+  "homepage": "https://github.com/ehsankorhani/just-express#readme",
+  "dependencies": {
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "helmet": "^3.21.2",
+    "uuid": "^3.3.3"
+  }
+}
