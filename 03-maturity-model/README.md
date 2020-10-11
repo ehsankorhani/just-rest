@@ -221,6 +221,7 @@ Methods:
     ```http://apiv1.example.com/api/users/42```
 
 <br>
+
 ---
 ### Reference
 
