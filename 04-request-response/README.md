@@ -99,16 +99,34 @@ We cannot use Body with `Get`.
 
 <br><br>
 
-## Authentication
-
-<br><br>
-
 ## Status Codes
 
+Bu convention we use HTTP Status Code to convey a meaning in the response message.
+
+Below is the list of categorized families of status codes:
+
+| Status Code | Meaning | 
+|-------------|---------|
+| 2xx         | Success operation |
+| 3xx         | Redirects |
+| 4xx         | Client error |
+| 5xx         | Server error |
 
 <br><br>
 
 ## API Versions
+
+In order to provide a consistent way to communicate with the server, an API versioning mechanism will be used. This ensures that the future changes in API backend will not affect the previously bound communications.
+
+There are multiple ways to apply this. Two most common ones are:
+
+- Directly in the endpoint URL
+    ```
+    https://api.twitter.com/1.1/account
+    ```
+- In a request header
+
+
 
 <br><br>
 
