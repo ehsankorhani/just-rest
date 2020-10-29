@@ -14,7 +14,8 @@ Is an acronym for Application Programming Interface. We creates the API on the s
 1. Resource
 2. Principles
 3. Maturity Model
-3. Request and Response
+4. Request and Response
+5. cURL
 
 
 <br>
