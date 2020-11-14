@@ -223,6 +223,112 @@ Fundamental parts of your API:
 <br><br>
 
 ---
+## Versioning
+
+Once you published an API, it's set in stone. Users/Customers are going to code against that API and they rely on the API not changing.
+
+However, the requirements are going to change or you need to provide new enhancements without breaking codes.
+
+API versioning is not Product versioning. Release API version only when the semantics, signature and the shape of data you are dealing are changing.
+
+> They shall not break existing clients.
+
+<br>
+
+### Versioning in the URI path
+Using part of the path to version allows you to drastically change the API:
+
+```
+https://.../api/v1/customers?type=current&id=123
+https://.../api/v2/current-customers/123
+```
+#### Tumblr
+```
+https://api.timblr.com/v2/user/
+```
+
+**Pros**:
+- Simple to segregate old APIs for backward compatibility
+
+**Cons**:
+- Requires lots of client changes as you version (version # has to change in every client)
+- Increase the size of the URI surface area you have to support
+
+<br>
+
+### Versioning in the URI parameters
+With optional query string parameter:
+```
+https://.../api/customers
+https://.../api/customers?v=2
+```
+
+#### Netflix
+```
+http://api.netflix.com/catalog/titles/series/70023?v=1.5
+```
+
+**Pros**:
+- Without version, users always get latest version of API
+- Little client changes as versions mature
+
+**Cons**:
+- Can surprise developers with unintended changes
+
+<br>
+
+### Versioning with Content Negotiation
+We can use `Accept` header for content negotiation. Use custom value Instead of standard MIME types:
+```
+GET /api/customers/123
+HOST: https://.../
+Accept: application/myapp.v1.customer.json
+``` 
+
+We can include information in Accept header for format too.
+
+#### Github
+```
+Content-Type: application/vnd.github.1.param+json
+```
+
+**Pros**:
+- Versioning is separated from URI surface. Alternatively, we can create our own MIME type: `vendor-name.myapp.v1.customers`
+- Package API and Resource versioning in one
+- Removes versioning from API so clients don't have to change
+
+**Cons**:
+- Adds complexity - adding headers isn't easy on all platforms
+- Can encourage increased versioning which causes more code churning
+
+<br>
+
+### Versioning with Custom Header
+Using a custom header to version API calls:
+```
+GET /api/customers/123
+HOST: https://...
+x-MyApp-version:2.1
+```
+
+Most routers will ignore the `x-` headers.
+
+#### Azure
+```
+x-ms-version: 2011-08-18
+```
+
+**Pros**:
+- Separate versioning from API call signature
+- Not tied to resource versioning
+
+**Cons**:
+- Adds complexity - adding headers isn't easy on all platforms
+- The resource you return should be versioned too (versioning with custom content type is easier)
+
+<br><br>
+
+---
 ### References
 
 * [Shawn Wildermuth - Web API Design](https://www.pluralsight.com/courses/web-api-design)
