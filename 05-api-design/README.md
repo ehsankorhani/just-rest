@@ -329,6 +329,86 @@ x-ms-version: 2011-08-18
 <br><br>
 
 ---
+## Securing APIs
+Think about security in the entire process.
+- Private, sensitive, credential data
+- Protect against overuse
+
+<br>
+
+### Protect your API
+Secure In-Transit.
+- SSL is almost always appropriate
+- Cost of SSL is worth the expense (usually)
+
+<br>
+
+#### Cross Domain Security
+What domains are using the API? Is it a private or public API?
+
+Two approaches:
+- Support *JSONP* as a format
+- Enable cross-origin resource sharing (CORS)
+
+<br>
+
+#### JSONP - JSON with Padding
+JSON wrapped in a function.<br>
+Packages results as a JavaScript script that is executed. We are getting JavaScript from different domains (CDN).<br>
+JavaScript calls back into one of your functions with the data.
+
+```js
+function updateUser(data) { /* use data */ }
+```
+```
+GET /api/games?callback=updateUser HTTP/1.1
+HOST: localhost:8863
+Accept: application/JavaScript # not JSON
+```
+```js
+updateUser({totalResults=1, results=[...]});
+```
+
+<br>
+
+#### Implementing CORS
+
+Allow cross site support from browser, but requires some handshaking.
+Implementing is difficult, but many platforms support it.
+
+1. Cross-Origin request is made
+2. Server asked is CORS allowed
+3. Server responds with rules
+4. Request is made with CORS header
+
+<br>
+
+#### Who is calling the API?
+
+1. Server-to-Server authentication
+    - API keys and shared secrets
+2. User proxy authentication
+    - OAuth or similar
+3. Direct user authentication
+    - Cookies or Token
+
+<br>
+
+#### How API Key and Signing works:
+1. Developer signs up for API
+2. API Issues API Key and shared secret
+
+Then;
+1. Developer creates request Action + API Key + Timestamp
+2. Developer signs request with shared secret
+3. Developer sends request + signature to service
+4. Service looks up shared secret via API Key
+5. Service signs request with shared secret
+6. Service verifies some signature and within timeout
+
+<br><br>
+
+---
 ### References
 
 * [Shawn Wildermuth - Web API Design](https://www.pluralsight.com/courses/web-api-design)
