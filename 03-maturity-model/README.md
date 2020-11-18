@@ -1,9 +1,14 @@
 # Richardson REST Maturity Model
 
+In 2008, Leonard Richardson proposed the following maturity model for web APIs:
+
 * Level 0 - The Swamp of POX
+    * Define one URI, and all operations are POST requests to this URI.
 * Level 1 - Resources
+    * Create separate URIs for individual resources.
 * Level 2 - HTTP Methods
 * Level 3 - Hypermedia Controls
+
 
 <br>
 

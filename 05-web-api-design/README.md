@@ -1,8 +1,14 @@
-# API Design
+# Web API Design
 
 API design is important because consumers should know how to use them in a simple way. APIs should be self-describing and self documenting.
 
-### What is a Web API?
+A well designed web API is:
+- **Platform independent**: Any client should be able to call the API. This requires using standard protocols and a format of the data to exchange.
+- **Service evolution**: The web API should be able to evolve and add functionality independently from client applications.
+
+<br>
+
+## What is a Web API?
 
 *HTTP/RPC*: remote procedure call
 - have state or session.
@@ -17,25 +23,55 @@ API design is important because consumers should know how to use them in a simpl
 
 <br>
 
+### REST
+- Separation of client and server
+- Server requests are stateless
+    - highly scalable - any server can handle any request from any client
+- Cacheable requests
+- Uniform interface
+    - includes using standard HTTP verbs to perform operations on resources
+
+<br>
+
 ### Resource based architecture
+REST APIs are designed around resources, which are any kind of object, data, or service that can be accessed by the client.
+
 - URIs are paths to resources
     - Query strings for non data (format, sort, ...)
 - Resources are entities
 - Relationships are nested (as hierarchy not relational model)
-
-### REST
-- Separation of client and server
-- Server requests are stateless
-- Cacheable requests
-- Uniform interface
+- A resource has an *identifier*
+    ```
+    https://.../api/orders/1
+    ```
+- Clients interact with a service by exchanging representations of resources (usually JSON)
+    ```js
+    {"orderId":1,"orderValue":99.90,"productId":1,"quantity":1}
+    ```
+- REST APIs are driven by hypermedia links that are contained in the representation.
+    ```js
+    {
+        "orderID":3,
+        "productID":2,
+        "quantity":4,
+        "orderValue":16.60,
+        "links": [
+            {"rel":"product","href":"https://.../api/customers/3", "action":"GET" },
+            {"rel":"product","href":"https://.../api/customers/3", "action":"PUT" }
+        ]
+    }
+    ```
 
 <br>
 
 ## Designing the API
 
+> Organize the API around resources
+
 URI should contain *Nouns*, not *Verbs*
 - GetCustomer -> incorrect
-- https://.../api/customers -> prefer plural
+- https://.../api/customers
+    * Note: prefer plural
 
 User identifiers to locate individual items in URIs (does not have to be internal key)
 - https://.../customers/123
@@ -44,35 +80,23 @@ User identifiers to locate individual items in URIs (does not have to be interna
 
 <br>
 
-### Verb to Action map
-- GET -> read
-- POST -> create
-- PUT -> update
-- DELETE -> delete
+A resource doesn't have to be based on a single physical data item. A resource might be implemented internally as several tables in a relational database, but presented to the client as a single entity.
 
-| Resource | GET | POST | PUT | DELETE |
-| -------- | --- | ---- | --- | ------ |
-| `/customers` | List | New Item | Status Code | Status Code (Error) |
-| `/customers/123` | Item | Status Code (error) | Update Item | Status Code |
+> Avoid requiring resource URIs more complex than `collection/item/collection`.
 
 <br>
 
-### Status Code
+### Define operations in terms of HTTP methods
+- GET --> read
+- POST --> create
+- PUT --> update
+- DELETE --> delete
+- PATCH --> partial update
 
-Normally we need between 8 to 10 status codes:
-
-The most basic ones are:
-
-- 200 OK
-- 400 Bad Request
-- 500 Internal Server Error
-
-In addition we can provide:
-- 201 Created
-- 304 Not Modified
-- 401 Unauthorized
-- 403 Forbidden
-- 404 Not Found
+| Resource | GET | POST | PUT | DELETE |
+| -------- | --- | ---- | --- | ------ |
+| `/customers` | List | New Item | Bulk Update / Status Code | Status Code (Error) / Remove all customers|
+| `/customers/123` | Item | Status Code (error) | Update Item | Status Code |
 
 <br>
 
@@ -99,18 +123,100 @@ Anything more complex should use query strings:
 https://.../api/customers?state=GA&salesperson=144
 ```
 
+| Resource | GET | POST | PUT | DELETE |
+| -------- | --- | ---- | --- | ------ |
+| `/customers/123/orders` | Orders of customer 123 | New order | Bulk Update / Status Code | Status Code (Error) / Remove all orders for customer 123 |
+
 <br>
 
-### Formatting results
+## Conform to HTTP semantics
 
-Content negotiation is a best practice.
-- Use ```Accept-Header``` to determine how to format:
-    ```
-    GET /api/games/2 HTTP/1.1
-    Accept: application/json, text/xml
-    Host: localhost:3001
-    ```
-- Not necessary to support all and have sane default
+### Status Code
+
+Normally we need between 8 to 10 status codes:
+
+The most basic ones are:
+
+- 200 OK
+- 400 Bad Request
+- 500 Internal Server Error
+
+In addition we can provide:
+- 201 Created
+- 304 Not Modified
+- 401 Unauthorized
+- 403 Forbidden
+- 404 Not Found
+
+<br>
+
+**GET method**
+- A successful `GET` method typically returns HTTP status code `200 (OK)`.
+- If the resource cannot be found, the method should return `404 (Not Found)`.
+
+<br>
+
+**POST method**
+- If a `POST` method creates a new resource, it returns HTTP status code `201 (Created)`.
+    - The response body contains a representation of the resource.
+- If it does not create a resource return `200 (OK)` and return content.
+- If there is no result return HTTP status code `204 (No Content)`.
+- For invalid data return `400 (Bad Request)`.
+
+<br>
+
+**PUT method**
+- If a `PUT` method creates a new resource, it returns HTTP status code `201 (Created)`.
+- If it updates an existing resource, return either `200 (OK)` or `204 (No Content)`.
+- If update is not possible return `409 (Conflict)`.
+
+*Consider implementing bulk HTTP PUT operations.
+
+<br>
+
+**PATCH methods**
+The media type for JSON merge patch is `application/merge-patch+json`.
+
+- If format isn't supported return `415 (Unsupported Media Type)`.
+- For malformed patch document return `400 (Bad Request)`.
+- If patch document is valid, but the changes can't be applied to the resource in its current state return `409 (Conflict)`.
+
+<br>
+
+**DELETE method**
+- For successful delete return `204 (No Content)`
+- If the resource doesn't exist, return `404 (Not Found)`.
+
+<br>
+
+### Media types
+
+Formats are specified through the use of *media types*, also called `MIME types`.
+
+he `Content-Type` header in a request or response specifies the format of the representation.
+
+```
+POST https://.../api/orders HTTP/1.1
+Content-Type: application/json; charset=utf-8
+
+{"Id":1,"Name":"Gizmo","Category":"Widgets","Price":1.99}
+```
+
+The server should return HTTP status code `415 (Unsupported Media Type)` If it doesn't support the media type.
+
+<br>
+
+### Content negotiation
+
+A client request can include an `Accept-Header` that contains a list of media types the client will accept from the server 
+
+```
+GET /api/games/2 HTTP/1.1
+Accept: application/json, text/xml
+Host: localhost:3001
+```
+
+If the server cannot match any of the media type(s) listed, it should return HTTP status code `406 (Not Acceptable)`.
 
 <br>
 

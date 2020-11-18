@@ -15,7 +15,7 @@ Is an acronym for Application Programming Interface. We creates the API on the s
 2. Principles
 3. Maturity Model
 4. Request and Response
-5. API Design
+5. Web API Design
 6. cURL
 7. Best Practices
 8. Consuming APIs
