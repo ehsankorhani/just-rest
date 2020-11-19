@@ -170,7 +170,7 @@ In addition we can provide:
 - If it updates an existing resource, return either `200 (OK)` or `204 (No Content)`.
 - If update is not possible return `409 (Conflict)`.
 
-*Consider implementing bulk HTTP PUT operations.
+Note: Consider implementing bulk HTTP PUT operations.
 
 <br>
 
@@ -186,6 +186,31 @@ The media type for JSON merge patch is `application/merge-patch+json`.
 **DELETE method**
 - For successful delete return `204 (No Content)`
 - If the resource doesn't exist, return `404 (Not Found)`.
+
+<br>
+
+**Asynchronous operations**
+
+- Return code `202 (Accepted)` to indicate the request was accepted for processing but is not completed.
+    ```
+    HTTP/1.1 202 Accepted
+    Location: /api/status/12345
+    ```
+- Alternatively, return a JSON response:
+    ```
+    HTTP/1.1 200 OK
+    Content-Type: application/json
+
+    {
+        "status":"In progress",
+        "link": { "rel":"cancel", "method":"delete", "href":"/api/status/12345" }
+    }
+    ```
+- If the asynchronous operation creates a new resource, return `303 (See Other)`.
+    ```
+    HTTP/1.1 303 See Other
+    Location: /api/orders/12345
+    ```
 
 <br>
 
@@ -293,9 +318,11 @@ List should always support paging.
         "results": [...]
     }
     ```
-- We can use different page size as well - but limit size of page to limit server load:
+- We can use different page size as well - but limit size of page to limit server load and prevent Denial of Service attacks:
     ```
     https://.../api/games?page=5&pageSize=50
+    # or
+    https://.../api/orders?limit=25&offset=50
     ```
 
 <br>
@@ -311,6 +338,24 @@ User request what it needs.
 - Update of partial is possible with `ETag` support:
     ```
     PATCH /api/games/2 HTTP/1.1
+    ```
+- Use `Range` header to specify the parts needed in request:
+    ```
+    GET https://.../api/products/10?fields=productImage HTTP/1.1
+    Range: bytes=0-2499
+    ```
+- Use `Content-Range` to specify the parts of data returned in request:
+    ```
+    HTTP/1.1 206 Partial Content
+
+    Accept-Ranges: bytes
+    Content-Type: image/jpeg
+    Content-Length: 2500
+    Content-Range: bytes 0-2499/4580
+
+    [...]
+    ```
+
 
 <br>
 
@@ -325,6 +370,59 @@ Fundamental parts of your API:
     https://.../api/calculateTax?state=GA&total=149.99
     https://.../api/restartServer?isColdBoot=true
     ```
+
+<br><br>
+
+---
+## HATEOAS - Hypertext as the Engine of Application State
+
+> One of the primary motivations behind REST is that it should be possible to navigate the entire set of resources without requiring prior knowledge of the URI scheme. 
+
+```js
+{
+  "orderID":3,
+  "productID":2,
+  "quantity":4,
+  "orderValue":16.60,
+  "links":[
+    {
+      "rel":"customer",
+      "href":"https://.../api/customers/3",
+      "action":"GET",
+      "types":["text/xml","application/json"]
+    },
+    {
+      "rel":"customer",
+      "href":"https://.../api/customers/3",
+      "action":"PUT",
+      "types":["application/x-www-form-urlencoded"]
+    },
+    {
+      "rel":"customer",
+      "href":"https://.../api/customers/3",
+      "action":"DELETE",
+      "types":[]
+    },
+    {
+      "rel":"self",
+      "href":"https://.../api/orders/3",
+      "action":"GET",
+      "types":["text/xml","application/json"]
+    },
+    {
+      "rel":"self",
+      "href":"https://.../api/orders/3",
+      "action":"PUT",
+      "types":["application/x-www-form-urlencoded"]
+    },
+    {
+      "rel":"self",
+      "href":"https://.../api/orders/3",
+      "action":"DELETE",
+      "types":[]
+    }]
+}
+```
 
 <br><br>
 
@@ -518,5 +616,4 @@ Then;
 ### References
 
 * [Shawn Wildermuth - Web API Design](https://www.pluralsight.com/courses/web-api-design)
-* [Best practices for REST API design](https://stackoverflow.blog/2020/03/02/best-practices-for-rest-api-design/)
 * [Web API design](https://docs.microsoft.com/en-us/azure/architecture/best-practices/api-design)
